@@ -2,13 +2,16 @@
 
 import 'dart:math';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:just_uis/data/education_data.dart';
+import 'package:just_uis/data/project_data.dart';
 import 'package:just_uis/data/skill.dart';
 import 'package:just_uis/data/work_data.dart';
 import 'package:just_uis/presentation/ui/project/add_project.dart';
+import 'package:just_uis/presentation/widget/project_card.dart';
 
 class DetailTab extends StatefulWidget {
   const DetailTab({super.key});
@@ -23,14 +26,19 @@ class _DetailTabState extends State<DetailTab> {
   List<Education> educationExp = [];
   bool showAllEduExperiences = false;
   List<Skill> skills = [];
+  bool showAllHardExperiences = false;
   List<Skill> softSkills = [];
+  bool showAllSoftExperiences = false;
+  List<Project> projects = [];
 
 
   double calculateListViewHeight() {
     final double listItemHeight = 70.0; // Height of each list item
-    final int maxVisibleItems = 2; // Maximum number of visible items without scrolling
+    final int maxVisibleItems =
+        2; // Maximum number of visible items without scrolling
     final int totalItems = workExperiences.length;
-    final int visibleItems = showAllWorkExperiences ? totalItems : min(totalItems, maxVisibleItems);
+    final int visibleItems =
+        showAllWorkExperiences ? totalItems : min(totalItems, maxVisibleItems);
     final double listViewHeight = visibleItems * listItemHeight;
 
     // Add some extra padding (10.0) at the bottom for better spacing
@@ -39,9 +47,37 @@ class _DetailTabState extends State<DetailTab> {
 
   double calculateListViewEduHeight() {
     final double listItemHeight = 70.0; // Height of each list item
-    final int maxVisibleItems = 2; // Maximum number of visible items without scrolling
+    final int maxVisibleItems =
+        2; // Maximum number of visible items without scrolling
     final int totalItems = educationExp.length;
-    final int visibleItems = showAllEduExperiences ? totalItems : min(totalItems, maxVisibleItems);
+    final int visibleItems =
+        showAllEduExperiences ? totalItems : min(totalItems, maxVisibleItems);
+    final double listViewHeight = visibleItems * listItemHeight;
+
+    // Add some extra padding (10.0) at the bottom for better spacing
+    return listViewHeight + 10.0;
+  }
+
+  double calculateSoftSkillHeight() {
+    final double listItemHeight = 20.0; // Height of each list item
+    final int maxVisibleItems =
+        4; // Maximum number of visible items without scrolling
+    final int totalItems = softSkills.length;
+    final int visibleItems =
+        showAllSoftExperiences ? totalItems : min(totalItems, maxVisibleItems);
+    final double listViewHeight = visibleItems * listItemHeight;
+
+    // Add some extra padding (10.0) at the bottom for better spacing
+    return listViewHeight + 10.0;
+  }
+
+  double calculateHardSkillHeight() {
+    final double listItemHeight = 20.0; // Height of each list item
+    final int maxVisibleItems =
+    4; // Maximum number of visible items without scrolling
+    final int totalItems = skills.length;
+    final int visibleItems =
+    showAllHardExperiences ? totalItems : min(totalItems, maxVisibleItems);
     final double listViewHeight = visibleItems * listItemHeight;
 
     // Add some extra padding (10.0) at the bottom for better spacing
@@ -80,7 +116,35 @@ class _DetailTabState extends State<DetailTab> {
                 ],
               ),
             ),
-      
+            SizedBox(
+              height: 200,
+              child: projects.isEmpty
+                  ? Center(
+                      child: Text('no projects'),
+                    )
+                  : projects.length <= 4
+                      ? ListView.builder(
+                          itemCount: projects.length,
+                          itemBuilder: (context, index) {
+                            final projectData = projects![index];
+                            return Container(
+                              height: 140,
+                              child: Text(projectData.name),
+                            );
+                          },
+                        )
+                      : CarouselSlider(
+                          options: CarouselOptions(height: 400.0),
+                          items: projects.map((project) {
+                            return Builder(
+                              builder: (BuildContext context) {
+                                return ProjectCard(project: project);
+                              },
+                            );
+                          }).toList(),
+                        ),
+            ),
+
             // Work Experince
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20.0),
@@ -122,7 +186,8 @@ class _DetailTabState extends State<DetailTab> {
                 shrinkWrap: true,
                 itemCount: showAllWorkExperiences
                     ? workExperiences.length
-                    : min(workExperiences.length, 2), // Display only first two or all if showing all
+                    : min(workExperiences.length,
+                        2), // Display only first two or all if showing all
                 itemBuilder: (context, index) {
                   return ListTile(
                     // List item widget...
@@ -164,8 +229,7 @@ class _DetailTabState extends State<DetailTab> {
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
-      
-      
+
             //   Education
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20.0),
@@ -205,7 +269,7 @@ class _DetailTabState extends State<DetailTab> {
               height: calculateListViewEduHeight(),
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: showAllWorkExperiences
+                itemCount: showAllEduExperiences
                     ? educationExp.length
                     : min(educationExp.length, 2),
                 itemBuilder: (context, index) {
@@ -223,7 +287,8 @@ class _DetailTabState extends State<DetailTab> {
                           children: [
                             Text(educationExp[index].locations),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 6),
                               child: Icon(Icons.circle, size: 10),
                             ),
                             Text(educationExp[index].timeDurations),
@@ -247,7 +312,8 @@ class _DetailTabState extends State<DetailTab> {
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
-      
+            SizedBox(height: 20,),
+
             //   Skills
             Text(
               'My Skillset',
@@ -274,19 +340,21 @@ class _DetailTabState extends State<DetailTab> {
                     icon: Icon(Icons.add))
               ],
             ),
-            // Container(
-            //   child: Expanded(
-            //     child: ListView.builder(
-            //       itemCount: skills.length,
-            //       itemBuilder: (context, index) {
-            //         return ListTile(
-            //           title: Text(skills[index].skillName),
-            //         );
-            //       },
-            //     ),
-            //   ),
-            // ),
-      
+            SizedBox(
+              height: calculateHardSkillHeight(),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: showAllHardExperiences
+                    ? skills.length
+                    : min(skills.length, 4),
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(skills[index].skillName),
+                  );
+                },
+              ),
+            ),
+
             //   Soft Skills
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -305,18 +373,20 @@ class _DetailTabState extends State<DetailTab> {
                     icon: Icon(Icons.add))
               ],
             ),
-            // Container(
-            //   child: Expanded(
-            //     child: ListView.builder(
-            //       itemCount: skills.length,
-            //       itemBuilder: (context, index) {
-            //         return ListTile(
-            //           title: Text(skills[index].skillName),
-            //         );
-            //       },
-            //     ),
-            //   ),
-            // ),
+            SizedBox(
+              height: calculateSoftSkillHeight(),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: showAllSoftExperiences
+                    ? softSkills.length
+                    : min(softSkills.length, 4),
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(skills[index].skillName),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -380,7 +450,7 @@ class _DetailTabState extends State<DetailTab> {
     ).then((newSoftExperience) {
       if (newSoftExperience != null) {
         setState(() {
-          skills.add(newSoftExperience);
+          softSkills.add(newSoftExperience);
         });
       }
     });
@@ -695,7 +765,6 @@ class _AddSoftSkillsState extends State<AddSoftSkills> {
     );
   }
 }
-
 
 // if (workExperiences.isEmpty)
 // Row(

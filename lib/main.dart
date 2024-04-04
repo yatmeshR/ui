@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:just_uis/demo.dart';
+
 import 'package:just_uis/presentation/ui/home/home_screen.dart';
 
 void main() {
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home:ProjectPage(),
+      home:HomeScreen(),
     );
   }
 }

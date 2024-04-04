@@ -1,9 +1,11 @@
 import 'dart:io';
-
-import 'package:flutter/foundation.dart';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:just_uis/data/project_data.dart';
+import 'package:just_uis/presentation/widget/button.dart';
+import 'package:just_uis/presentation/widget/mt_field.dart';
 
 
 
@@ -12,183 +14,173 @@ import 'package:image_picker/image_picker.dart';
 
 
 class AddProjectScreen extends StatefulWidget {
+  const AddProjectScreen({Key? key}) : super(key: key);
+
   @override
-  _AddProjectScreenState createState() => _AddProjectScreenState();
+  State<AddProjectScreen> createState() => _AddProjectScreenState();
 }
 
 class _AddProjectScreenState extends State<AddProjectScreen> {
-  List<Project> projects = [];
+  final TextEditingController projectNameController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController projectTypeController = TextEditingController();
 
-  void addProject(File image, String name, String description, String type) {
+
+  List<File> images = [];
+  final _addProjectFormKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    super.dispose();
+    projectNameController.dispose();
+    descriptionController.dispose();
+    projectTypeController.dispose();
+  }
+
+  void selectImages() async {
+    var res = await pickImages();
     setState(() {
-      projects.add(Project(image: image, name: name, description: description, type: type));
+      images = res;
     });
   }
 
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Projects'),
-      ),
-      body: projects.isEmpty
-          ? Center(
-        child: TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AddProjectPage(onAddProject: addProject)),
-            );
-          },
-          child: Text('Add Project'),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: AppBar(
+          title: const Text(
+            'Add Product',
+            style: TextStyle(
+              color: Colors.black,
+            ),
+          ),
         ),
-      )
-          : projects.length <= 4
-          ? ListView.builder(
-        itemCount: projects.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(projects[index].name),
-            subtitle: Text(projects[index].description),
-            leading: Image.file(projects[index].image),
-          );
-        },
-      )
-          : CarouselSlider(
-        options: CarouselOptions(height: 400.0),
-        items: projects.map((project) {
-          return Builder(
-            builder: (BuildContext context) {
-              return ListTile(
-                title: Text(project.name),
-                subtitle: Text(project.description),
-                leading: Image.file(project.image),
-              );
-            },
-          );
-        }).toList(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddProjectPage(onAddProject: addProject)),
-          );
-        },
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class AddProjectPage extends StatefulWidget {
-  final Function(File, String, String, String) onAddProject;
-
-  AddProjectPage({required this.onAddProject});
-
-  @override
-  _AddProjectPageState createState() => _AddProjectPageState();
-}
-
-class _AddProjectPageState extends State<AddProjectPage> {
-  late File _image;
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _typeController = TextEditingController();
-
-  Future<void> getImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Add Project'),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.0),
         child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: getImage,
-                child: Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+          key: _addProjectFormKey,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                images.isNotEmpty
+                    ? CarouselSlider(
+                  items: images.map(
+                        (i) {
+                      return Builder(
+                        builder: (BuildContext context) => Image.file(
+                          i,
+                          fit: BoxFit.cover,
+                          height: 200,
+                        ),
+                      );
+                    },
+                  ).toList(),
+                  options: CarouselOptions(
+                    viewportFraction: 1,
+                    height: 200,
                   ),
-                  child: _image != null ? Image.file(_image, fit: BoxFit.cover) : Icon(Icons.add),
+                )
+                    : GestureDetector(
+                  onTap: selectImages,
+                  child: DottedBorder(
+                    borderType: BorderType.RRect,
+                    radius: const Radius.circular(10),
+                    dashPattern: const [10, 4],
+                    strokeCap: StrokeCap.round,
+                    child: Container(
+                      width: double.infinity,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.folder_open,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            'Select Project Images',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Project Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter project name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Project Description'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter project description';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _typeController,
-                decoration: InputDecoration(labelText: 'Project Type'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter project type';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    widget.onAddProject(_image, _nameController.text, _descriptionController.text, _typeController.text);
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text('Add Project'),
-              ),
-            ],
+                const SizedBox(height: 30),
+                CustomTextField(
+                  controller: projectNameController,
+                  hintText: 'Project Name',
+                ),
+                const SizedBox(height: 10),
+                CustomTextField(
+                  controller: descriptionController,
+                  hintText: 'Description',
+                  maxLines: 7,
+                ),
+                const SizedBox(height: 10),
+                const SizedBox(height: 10),
+                CustomTextField(
+                  controller: projectTypeController,
+                  hintText: 'Project Type',
+                ),
+                const SizedBox(height: 10),
+
+                CustomButton(
+                  text: 'Add',
+                  onTap: (){
+                    Navigator.pop(
+                      context,
+                     Project(
+                          name: projectNameController.text,
+                          description: descriptionController.text,
+                          type: projectTypeController.text,
+                          images: images.toString() ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<File>('_image', _image));
+}
+
+
+Future<List<File>> pickImages() async {
+  List<File> images = [];
+  try {
+    var files = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+    );
+    if (files != null && files.files.isNotEmpty) {
+      for (int i = 0; i < files.files.length; i++) {
+        images.add(File(files.files[i].path!));
+      }
+    }
+  } catch (e) {
+    debugPrint(e.toString());
   }
+  return images;
 }
 
 
-class Project {
-  final String name;
-  final String description;
-  final String type;
-  final File image;
-
-  Project({required this.name, required this.description, required this.type, required this.image});
-}
